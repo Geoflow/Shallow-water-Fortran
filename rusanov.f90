@@ -34,7 +34,7 @@ subroutine init_syst(space_number,final_time)
 
 
         a=-1._rp
-        b=1._rp
+        b=5._rp
         dx_sys=(b-a)/Ns
        
 
@@ -46,7 +46,7 @@ subroutine init_syst(space_number,final_time)
         X_sys(i)=a+i*dx_sys  ! espace
 
         u_prevs(i,1)=init_dam(x_sys(i))! hauteur
-        u_prevs(i,2)=0._rp!un/(un+abs(x_sys(i)))! u vitesse
+        u_prevs(i,2)=1._rp/(un+abs(x_sys(i)))! u vitesse
         u_prevs(i,3)=5._rp ! temperature
 
     END DO 
@@ -135,7 +135,7 @@ real(rp) , dimension(3), intent(out) :: Y
 
 
 Y(1)=X(2)*X(1)
-Y(2)=X(2)**2+0.5*g*X(2)*X(3)*X(1)**2
+Y(2)=X(2)**2+0.5*grv*X(2)*X(3)*X(1)**2
 Y(3)=X(2)*X(3)*X(1)
 
 
@@ -293,7 +293,7 @@ DO WHILE (t<Tm )
     t=t+dt_sys
     step=step+1
     
-    if (mod(step,1000)==0)then
+    if (mod(step,5)==0)then
      write(FileName,'(A,I4.4,A)') 'resultat/hauteur_rus',cpt,'.txt'
      CALL save_file(X_sys,U_nexts(:,1),FileName)
      cpt=cpt+1
@@ -357,6 +357,7 @@ DO WHILE (t<Tm )
             
     END DO 
 !$OMP END PARALLEL
+
 !----------------------------BORD---------------------------------------
    
    Call HLL_flow(U_prevs(Ns,:),U_prevs(1,:),Fluxx(1,:))
@@ -382,7 +383,7 @@ DO WHILE (t<Tm )
 !$OMP END PARALLEL
     
    U_nexts(1,:)=U_prevs(1,:)-dt_sys/dx_sys*(Fluxx(2,:)-Fluxx(1,:))
-  U_nexts(Ns,:)=U_prevs(Ns,:)-dt_sys/dx_sys*(Fluxx(1,:)-Fluxx(Ns-1,:))
+   U_nexts(Ns,:)=U_prevs(Ns-1,:)!-dt_sys/dx_sys*(Fluxx(Ns,:)-Fluxx(Ns-1,:))
 
     
 
@@ -392,12 +393,12 @@ DO WHILE (t<Tm )
 
     step=step+1
     
-   ! if (mod(step,1000)==0)then
-    ! write(FileName,'(A,I4.4,A)') 'resultat/hauteur_hll',cpt,'.txt'
+  !  if (mod(step,50)==0)then
+  !   write(FileName,'(A,I4.4,A)') 'resultat/hauteur_hll',cpt,'.txt'
   !   CALL save_file(X_sys,U_nexts(:,1),FileName)
    !  cpt=cpt+1
   
-  ! end if
+   ! end if
 
 END DO
 
@@ -406,7 +407,7 @@ END DO
      
      !CALL save_file(X_sys,U_nexts(:,1),FileName)
 CALL save_file(X_sys,U_nexts(:,1),'hauteur_hll.txt')
-!CALL save_file(X_sys,U_nexts(:,2),'vitesse_hll.txt')
+CALL save_file(X_sys,U_nexts(:,2),'vitesse_hll.txt')
 !CALL save_file(X_sys,U_nexts(:,3),'temperature_hll.txt')
 
 
